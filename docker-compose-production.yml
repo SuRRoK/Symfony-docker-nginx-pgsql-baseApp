@@ -1,0 +1,38 @@
+version: '3'
+services:
+    myapp-nginx:
+        image: ${REGISTRY_ADDRESS}/myapp-nginx:${IMAGE_TAG}
+        restart: always
+        depends_on:
+            - myapp-php-fpm
+        ports:
+            - "8000:80"
+    myapp-php-fpm:
+        image: ${REGISTRY_ADDRESS}/myapp-php-fpm:${IMAGE_TAG}
+        restart: always
+        environment:
+            APP_SECRET: ${MYAPP_APP_SECRET}
+            DATABASE_URL: pgsql://myapp:${MYAPP_DB_PASSWORD}@myapp-postgres:5432/app
+            MAILER_URL: null://localhost
+        depends_on:
+            - myapp-postgres
+    myapp-php-cli:
+        image: ${REGISTRY_ADDRESS}/myapp-php-cli:${IMAGE_TAG}
+        environment:
+            APP_SECRET: ${MYAPP_APP_SECRET}
+            DATABASE_URL: pgsql://myapp:${MYAPP_DB_PASSWORD}@myapp-postgres:5432/app
+            MAILER_URL: null://localhost
+        depends_on:
+            - myapp-postgres
+    myapp-postgres:
+        image: ${REGISTRY_ADDRESS}/myapp-postgres:${IMAGE_TAG}
+        restart: always
+        volumes:
+            - myapp-postgres:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: app
+            POSTGRES_PASSWORD: ${MYAPP_DB_PASSWORD}
+            POSTGRES_DB: app
+
+volumes:
+    myapp-postgres:
